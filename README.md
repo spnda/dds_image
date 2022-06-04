@@ -3,7 +3,7 @@
 A C++11 single-header DDS (DirectDraw Surface) image library,
 with no dependencies.
 It also includes utilities to work with Vulkan, as well
-as optional support for C++17 specific features.
+as optional support for C++17 and C++20 specific features.
 You can quickly add this as a submodule and add the header files,
 or import it as a subdirectory in CMake.
 
@@ -19,6 +19,11 @@ dds::readFile("example.dds", &image);
 On MSVC you might need to build with `/Zc:__cplusplus` for the built-in C++17 features to work.
 You can then optionally also define `DDS_USE_STD_FILESYSTEM`, which will make `dds::readFile` accept
 a `std::filesystem::path` instead.
+
+Each mipmap can be accessed through `image.mipmaps`. A mipmap is a `dds::span` which represents a
+contiguous block of memory within the image data that represents the specific mipmap. All mipmaps
+use the same format and the mipmaps are arranged in order of size in the vector, meaning the
+largest mipmap is `image.mipmaps.front()` and every next mipmap is exactly 50% smaller.
 
 ### Vulkan Usage
 
@@ -40,3 +45,7 @@ VkImageFormat imageFormat = dds::getVulkanFormat(image.format, image.supportsAlp
 VkImageCreateInfo imageCreateInfo = dds::getVulkanImageCreateInfo(&image);
 VkImageViewCreateInfo imageViewCreateInfo = dds::getVulkanImageViewCreateInfo(&image);
 ```
+
+### License
+
+The library itself is licensed under MIT.

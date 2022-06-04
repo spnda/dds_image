@@ -1,24 +1,32 @@
 #pragma once
 
+#include <cstdint>
 #include <vector>
 
-#define MAKE_FOUR_CHARACTER_CODE(char1, char2, char3, char4) \
-      static_cast<uint32_t>(char1)        |                  \
-     (static_cast<uint32_t>(char2) <<  8) |                  \
-     (static_cast<uint32_t>(char3) << 16) |                  \
-     (static_cast<uint32_t>(char4) << 24)
+#define MAKE_FOUR_CHARACTER_CODE(char1, char2, char3, char4)                                                                               \
+    static_cast<uint32_t>(char1) | (static_cast<uint32_t>(char2) << 8) | (static_cast<uint32_t>(char3) << 16) |                            \
+        (static_cast<uint32_t>(char4) << 24)
 
-#define UNDO_FOUR_CHARACTER_CODE(x, name) \
-    std::string name;                     \
-    name.reserve(4);                      \
-    name.push_back(x >> 0);               \
-    name.push_back(x >> 8);               \
-    name.push_back(x >> 16);              \
-    name.push_back(x >> 24);              \
+#define UNDO_FOUR_CHARACTER_CODE(x, name)                                                                                                  \
+    std::string name;                                                                                                                      \
+    name.reserve(4);                                                                                                                       \
+    name.push_back(x >> 0);                                                                                                                \
+    name.push_back(x >> 8);                                                                                                                \
+    name.push_back(x >> 16);                                                                                                               \
+    name.push_back(x >> 24);
 
+#if __cplusplus >= 201703L
+#define DDS_NO_DISCARD [[nodiscard]]
+#else
+#define DDS_NO_DISCARD
+#endif
+
+// clang-format off
 #ifndef __dxgiformat_h__ // We'll try and act as if we're the actual dxgiformat.h header.
 #define __dxgiformat_h__
 // See https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+// For converting D3DFormat to DXGI_Format see the following table:
+// https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-legacy-formats.
 enum DXGI_FORMAT {
     DXGI_FORMAT_UNKNOWN	                    = 0,
     DXGI_FORMAT_R32G32B32A32_TYPELESS       = 1,
@@ -142,15 +150,34 @@ enum DXGI_FORMAT {
     DXGI_FORMAT_FORCE_UINT                  = 0xffffffff
 };
 #endif // #ifndef __dxgiformat_h__
+// clang-format on
 
 namespace dds {
-    enum ResourceDimension {
-        Unknown,
-        Buffer,
-        Texture1D,
-        Texture2D,
-        Texture3D
+#if __cplusplus >= 202002L
+    template <typename T>
+    using span = std::span<T>;
+#else
+    // This is a quick reimplementation of std::span to use it with versions before C++20
+    template <typename T>
+    class span {
+        T* _data;
+        std::size_t _size = 0;
+
+    public:
+        span(T* data, std::size_t size) : _data(data), _size(size) {};
+        DDS_NO_DISCARD std::size_t size() const noexcept {
+            return _size;
+        }
+        DDS_NO_DISCARD std::size_t size_bytes() const noexcept {
+            return _size * sizeof(T);
+        }
+        DDS_NO_DISCARD T* data() const noexcept {
+            return _data;
+        }
     };
+#endif
+
+    enum ResourceDimension { Unknown, Buffer, Texture1D, Texture2D, Texture3D };
 
     enum ReadResult {
         Success = 0,
@@ -161,7 +188,7 @@ namespace dds {
     };
 
     enum DdsMagicNumber {
-        DDS  = MAKE_FOUR_CHARACTER_CODE('D', 'D', 'S', ' '),
+        DDS = MAKE_FOUR_CHARACTER_CODE('D', 'D', 'S', ' '),
 
         DXT1 = MAKE_FOUR_CHARACTER_CODE('D', 'X', 'T', '1'), // BC1_UNORM
         DXT2 = MAKE_FOUR_CHARACTER_CODE('D', 'X', 'T', '2'), // BC2_UNORM
@@ -179,10 +206,10 @@ namespace dds {
         YUY2 = MAKE_FOUR_CHARACTER_CODE('Y', 'U', 'Y', '2'), // YUY2
         UYVY = MAKE_FOUR_CHARACTER_CODE('U', 'Y', 'V', 'Y'),
 
-        DX10 = MAKE_FOUR_CHARACTER_CODE('D', 'X', '1', '0'),
+        DX10 = MAKE_FOUR_CHARACTER_CODE('D', 'X', '1', '0'), // Any DXGI format
     };
 
-    enum PixelFormatFlags : uint32_t {
+    enum class PixelFormatFlags : uint32_t {
         AlphaPixels = 0x1,
         Alpha = 0x2,
         FourCC = 0x4,
@@ -193,6 +220,10 @@ namespace dds {
         Luminance = 0x20000,
         LuminanceA = Luminance | AlphaPixels,
     };
+
+    DDS_NO_DISCARD inline PixelFormatFlags operator&(PixelFormatFlags a, PixelFormatFlags b) {
+        return static_cast<PixelFormatFlags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+    }
 
     struct FilePixelFormat {
         uint32_t size;
@@ -237,12 +268,12 @@ namespace dds {
         uint32_t caps4;
         uint32_t reserved2;
 
-        bool hasAlphaFlag() const;
+        DDS_NO_DISCARD bool hasAlphaFlag() const;
     };
     static_assert(sizeof(FileHeader) == 124, "DDS Header size mismatch. Must be 124 bytes.");
 
-    bool FileHeader::hasAlphaFlag() const {
-        return !!(pixelFormat.flags & PixelFormatFlags::AlphaPixels);
+    inline bool FileHeader::hasAlphaFlag() const {
+        return (pixelFormat.flags & PixelFormatFlags::AlphaPixels) == PixelFormatFlags::AlphaPixels;
     }
 
     /** An additional header for DX10 */
@@ -263,6 +294,7 @@ namespace dds {
         ResourceDimension dimension;
         bool supportsAlpha = false;
         DXGI_FORMAT format;
-        std::vector<char> data = {};
+        std::vector<uint8_t> data = {};
+        std::vector<dds::span<uint8_t>> mipmaps;
     };
-}
+} // namespace dds

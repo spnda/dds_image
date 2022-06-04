@@ -1,8 +1,12 @@
 #pragma once
 
-#if __cplusplus > 201703L && defined(DDS_USE_STD_FILESYSTEM)
+#if __cplusplus >= 201703L && defined(DDS_USE_STD_FILESYSTEM)
 #include <filesystem>
 namespace fs = std::filesystem;
+#endif
+
+#if __cplusplus >= 202002L
+#include <concepts>
 #endif
 
 #include <fstream>
@@ -10,14 +14,30 @@ namespace fs = std::filesystem;
 
 #include "dds_formats.hpp"
 
-#if __cplusplus > 201703L
-#define NO_DISCARD [[nodiscard]]
-#else
-#define NO_DISCARD
-#endif
-
 namespace dds {
-    NO_DISCARD inline uint32_t getBlockSize(const DXGI_FORMAT format) {
+    // Not going to include <algorithm> just for std::max and std::min
+    template <typename T>
+#if __cplusplus >= 202002L
+    requires std::is_arithmetic_v<T>
+#endif
+    inline constexpr const T& max(const T& a, const T& b) {
+        return a > b ? a : b;
+    }
+
+    template <typename T>
+#if __cplusplus >= 202002L
+    requires std::is_arithmetic_v<T>
+#endif
+    inline constexpr const T& min(const T& a, const T& b) {
+        return a > b ? b : a;
+    }
+
+    template <typename T>
+    inline constexpr bool hasBit(T value, T bit) {
+        return (value & bit) == bit;
+    }
+
+    DDS_NO_DISCARD inline uint32_t getBlockSize(const DXGI_FORMAT format) {
         switch (format) {
             case DXGI_FORMAT_BC1_UNORM:
             case DXGI_FORMAT_BC1_UNORM_SRGB:
@@ -36,7 +56,7 @@ namespace dds {
         }
     }
 
-    NO_DISCARD inline uint32_t getBitsPerPixel(const DXGI_FORMAT format) {
+    DDS_NO_DISCARD inline uint32_t getBitsPerPixel(const DXGI_FORMAT format) {
         switch (format) {
             case DXGI_FORMAT_R32G32B32A32_TYPELESS:
             case DXGI_FORMAT_R32G32B32A32_FLOAT:
@@ -161,39 +181,63 @@ namespace dds {
     }
 
 #ifdef VK_VERSION_1_0
-    NO_DISCARD inline VkFormat getVulkanFormat(DXGI_FORMAT format, const bool alphaFlag) {
+    DDS_NO_DISCARD inline VkFormat getVulkanFormat(DXGI_FORMAT format, const bool alphaFlag) {
         switch (format) {
             case DXGI_FORMAT_BC1_UNORM: {
-                if (alphaFlag) return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
-                else return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
+                if (alphaFlag)
+                    return VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+                else
+                    return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
             }
             case DXGI_FORMAT_BC1_UNORM_SRGB: {
-                if (alphaFlag) return VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
-                else return VK_FORMAT_BC1_RGB_SRGB_BLOCK;
+                if (alphaFlag)
+                    return VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
+                else
+                    return VK_FORMAT_BC1_RGB_SRGB_BLOCK;
             }
 
-            case DXGI_FORMAT_BC2_UNORM:       return VK_FORMAT_BC2_UNORM_BLOCK;
-            case DXGI_FORMAT_BC2_UNORM_SRGB:  return VK_FORMAT_BC2_SRGB_BLOCK;
-            case DXGI_FORMAT_BC3_UNORM:       return VK_FORMAT_BC3_UNORM_BLOCK;
-            case DXGI_FORMAT_BC3_UNORM_SRGB:  return VK_FORMAT_BC3_SRGB_BLOCK;
-            case DXGI_FORMAT_BC4_UNORM:       return VK_FORMAT_BC4_UNORM_BLOCK;
-            case DXGI_FORMAT_BC4_SNORM:       return VK_FORMAT_BC4_SNORM_BLOCK;
-            case DXGI_FORMAT_BC5_UNORM:       return VK_FORMAT_BC5_UNORM_BLOCK;
-            case DXGI_FORMAT_BC5_SNORM:       return VK_FORMAT_BC5_SNORM_BLOCK;
+            case DXGI_FORMAT_BC2_UNORM:
+                return VK_FORMAT_BC2_UNORM_BLOCK;
+            case DXGI_FORMAT_BC2_UNORM_SRGB:
+                return VK_FORMAT_BC2_SRGB_BLOCK;
+            case DXGI_FORMAT_BC3_UNORM:
+                return VK_FORMAT_BC3_UNORM_BLOCK;
+            case DXGI_FORMAT_BC3_UNORM_SRGB:
+                return VK_FORMAT_BC3_SRGB_BLOCK;
+            case DXGI_FORMAT_BC4_UNORM:
+                return VK_FORMAT_BC4_UNORM_BLOCK;
+            case DXGI_FORMAT_BC4_SNORM:
+                return VK_FORMAT_BC4_SNORM_BLOCK;
+            case DXGI_FORMAT_BC5_UNORM:
+                return VK_FORMAT_BC5_UNORM_BLOCK;
+            case DXGI_FORMAT_BC5_SNORM:
+                return VK_FORMAT_BC5_SNORM_BLOCK;
 
-            case DXGI_FORMAT_R8G8B8A8_UNORM:      return VK_FORMAT_R8G8B8A8_UNORM;
-            case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB: return VK_FORMAT_R8G8B8A8_SRGB;
-            case DXGI_FORMAT_R8G8B8A8_UINT:       return VK_FORMAT_R8G8B8A8_UINT;
-            case DXGI_FORMAT_R8G8B8A8_SNORM:      return VK_FORMAT_R8G8B8A8_SNORM;
-            case DXGI_FORMAT_R8G8B8A8_SINT:       return VK_FORMAT_R8G8B8A8_SINT;
-            case DXGI_FORMAT_B8G8R8A8_UNORM:      return VK_FORMAT_B8G8R8A8_UNORM;
-            case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB: return VK_FORMAT_B8G8R8A8_SRGB;
+            case DXGI_FORMAT_R8G8B8A8_UNORM:
+                return VK_FORMAT_R8G8B8A8_UNORM;
+            case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+                return VK_FORMAT_R8G8B8A8_SRGB;
+            case DXGI_FORMAT_R8G8B8A8_UINT:
+                return VK_FORMAT_R8G8B8A8_UINT;
+            case DXGI_FORMAT_R8G8B8A8_SNORM:
+                return VK_FORMAT_R8G8B8A8_SNORM;
+            case DXGI_FORMAT_R8G8B8A8_SINT:
+                return VK_FORMAT_R8G8B8A8_SINT;
+            case DXGI_FORMAT_B8G8R8A8_UNORM:
+                return VK_FORMAT_B8G8R8A8_UNORM;
+            case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+                return VK_FORMAT_B8G8R8A8_SRGB;
 
-            case DXGI_FORMAT_R16G16B16A16_FLOAT:  return VK_FORMAT_R16G16B16A16_SFLOAT;
-            case DXGI_FORMAT_R16G16B16A16_SINT:   return VK_FORMAT_R16G16B16A16_SINT;
-            case DXGI_FORMAT_R16G16B16A16_UINT:   return VK_FORMAT_R16G16B16A16_UINT;
-            case DXGI_FORMAT_R16G16B16A16_UNORM:  return VK_FORMAT_R16G16B16A16_UNORM;
-            case DXGI_FORMAT_R16G16B16A16_SNORM:  return VK_FORMAT_R16G16B16A16_SNORM;
+            case DXGI_FORMAT_R16G16B16A16_FLOAT:
+                return VK_FORMAT_R16G16B16A16_SFLOAT;
+            case DXGI_FORMAT_R16G16B16A16_SINT:
+                return VK_FORMAT_R16G16B16A16_SINT;
+            case DXGI_FORMAT_R16G16B16A16_UINT:
+                return VK_FORMAT_R16G16B16A16_UINT;
+            case DXGI_FORMAT_R16G16B16A16_UNORM:
+                return VK_FORMAT_R16G16B16A16_UNORM;
+            case DXGI_FORMAT_R16G16B16A16_SNORM:
+                return VK_FORMAT_R16G16B16A16_SNORM;
 
             case DXGI_FORMAT_R8G8_B8G8_UNORM:
             case DXGI_FORMAT_G8R8_G8B8_UNORM:
@@ -203,16 +247,23 @@ namespace dds {
         }
     }
 
-    NO_DISCARD inline VkImageCreateInfo getVulkanImageCreateInfo(dds::Image* image) {
+    DDS_NO_DISCARD inline VkImageCreateInfo getVulkanImageCreateInfo(dds::Image* image, VkFormat format) {
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         switch (image->dimension) {
-            case Texture1D: imageInfo.imageType = VK_IMAGE_TYPE_1D; break;
-            case Texture2D: imageInfo.imageType = VK_IMAGE_TYPE_2D; break;
-            case Texture3D: imageInfo.imageType = VK_IMAGE_TYPE_3D; break;
-            default: break;
+            case Texture1D:
+                imageInfo.imageType = VK_IMAGE_TYPE_1D;
+                break;
+            case Texture2D:
+                imageInfo.imageType = VK_IMAGE_TYPE_2D;
+                break;
+            case Texture3D:
+                imageInfo.imageType = VK_IMAGE_TYPE_3D;
+                break;
+            default:
+                break;
         }
-        imageInfo.format = getVulkanFormat(image->format, image->supportsAlpha);
+        imageInfo.format = format;
         imageInfo.extent.width = image->width;
         imageInfo.extent.height = image->height;
         imageInfo.extent.depth = image->depth;
@@ -221,11 +272,15 @@ namespace dds {
         return imageInfo;
     }
 
-    NO_DISCARD inline VkImageViewCreateInfo getVulkanImageViewCreateInfo(dds::Image* image) {
+    DDS_NO_DISCARD inline VkImageCreateInfo getVulkanImageCreateInfo(dds::Image* image) {
+        return getVulkanImageCreateInfo(image, getVulkanFormat(image->format, image->supportsAlpha));
+    }
+
+    DDS_NO_DISCARD inline VkImageViewCreateInfo getVulkanImageViewCreateInfo(dds::Image* image, VkFormat format) {
         VkImageViewCreateInfo imageViewInfo = {};
         imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        imageViewInfo.format = getVulkanFormat(image->format, image->supportsAlpha);
+        imageViewInfo.format = format;
         imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         imageViewInfo.subresourceRange.baseMipLevel = 0;
         imageViewInfo.subresourceRange.levelCount = image->numMips;
@@ -233,12 +288,16 @@ namespace dds {
         imageViewInfo.subresourceRange.layerCount = image->arraySize;
         return imageViewInfo;
     }
+
+    DDS_NO_DISCARD inline VkImageViewCreateInfo getVulkanImageViewCreateInfo(dds::Image* image) {
+        return getVulkanImageViewCreateInfo(image, getVulkanFormat(image->format, image->supportsAlpha));
+    }
 #endif // #ifdef VK_VERSION_1_0
 
-#if __cplusplus > 201703L && defined(DDS_USE_STD_FILESYSTEM)
-    NO_DISCARD inline dds::ReadResult readFile(const fs::path& filepath, dds::Image* image) {
+#if __cplusplus >= 201703L && defined(DDS_USE_STD_FILESYSTEM)
+    DDS_NO_DISCARD inline dds::ReadResult readFile(const fs::path& filepath, dds::Image* image) {
 #else
-    NO_DISCARD inline dds::ReadResult readFile(const std::string& filepath, dds::Image* image) {
+    DDS_NO_DISCARD inline dds::ReadResult readFile(const std::string& filepath, dds::Image* image) {
 #endif
         std::ifstream filestream(filepath, std::ios::binary | std::ios::in);
         if (!filestream.is_open())
@@ -246,15 +305,15 @@ namespace dds {
 
         // Read the file into a vector.
         filestream.seekg(0, std::ios::end);
-        size_t fileSize = filestream.tellg();
+        auto fileSize = filestream.tellg();
         image->data.resize(fileSize);
         filestream.seekg(0);
-        filestream.read(image->data.data(), static_cast<int64_t>(fileSize));
+        filestream.read(reinterpret_cast<char*>(image->data.data()), fileSize);
 
         // Read the magic number
         auto* ptr = image->data.data();
         auto* ddsMagic = reinterpret_cast<uint32_t*>(ptr);
-        ptr += 4;
+        ptr += sizeof(uint32_t);
 
         // Read the header
         if (fileSize < sizeof(dds::FileHeader))
@@ -262,77 +321,117 @@ namespace dds {
         const auto* header = reinterpret_cast<const dds::FileHeader*>(ptr);
         ptr += sizeof(dds::FileHeader);
 
-        // Validate header
+        // Validate header. A DWORD (magic number) containing the four character code value 'DDS '
+        // (0x20534444).
         if (*ddsMagic != dds::DdsMagicNumber::DDS)
             return dds::ReadResult::Failure;
 
-//      UNDO_FOUR_CHARACTER_CODE(header->pixelFormat.fourCC, fourCCStr);
-//      std::cout << fourCCStr << std::endl;
-        if (header->pixelFormat.flags & PixelFormatFlags::FourCC) {
-            const dds::Dx10Header* additionalHeader;
-            switch (header->pixelFormat.fourCC) {
-                case dds::DdsMagicNumber::DX10: {
-                    additionalHeader = reinterpret_cast<const dds::Dx10Header*>(ptr);
-                    ptr += sizeof(dds::Dx10Header);
+        const dds::Dx10Header* additionalHeader = nullptr;
+        if (hasBit(header->pixelFormat.flags, PixelFormatFlags::FourCC) &&
+            hasBit(header->pixelFormat.fourCC, static_cast<uint32_t>(DdsMagicNumber::DX10))) {
+            additionalHeader = reinterpret_cast<const dds::Dx10Header*>(ptr);
+            ptr += sizeof(dds::Dx10Header);
 
-                    image->arraySize = additionalHeader->arraySize;
-                    image->format = additionalHeader->dxgiFormat;
-                    image->dimension = additionalHeader->resourceDimension;
-                    break;
+            // "If the DDS_PIXELFORMAT dwFlags is set to DDPF_FOURCC and a dwFourCC is
+            // set to "DX10", then the total file size needs to be at least 148
+            // bytes."
+            if (fileSize < 148)
+                return dds::ReadResult::InvalidSize;
+
+            image->arraySize = additionalHeader->arraySize;
+            image->format = additionalHeader->dxgiFormat;
+            image->dimension = additionalHeader->resourceDimension;
+        }
+
+        // Determine format information
+        auto getFormatInfo = [](const dds::FileHeader* header) -> DXGI_FORMAT {
+            auto& pf = header->pixelFormat;
+            if ((pf.flags & PixelFormatFlags::FourCC) == PixelFormatFlags::FourCC) {
+                switch (pf.fourCC) {
+                    // clang-format off
+                    case DXT1:            return DXGI_FORMAT_BC1_UNORM;
+                    case DXT2: case DXT3: return DXGI_FORMAT_BC2_UNORM;
+                    case DXT4: case DXT5: return DXGI_FORMAT_BC3_UNORM;
+                    case ATI1: case BC4U: return DXGI_FORMAT_BC4_UNORM;
+                    case BC4S:            return DXGI_FORMAT_BC4_SNORM;
+                    case ATI2: case BC5U: return DXGI_FORMAT_BC5_UNORM;
+                    case BC5S:            return DXGI_FORMAT_BC5_SNORM;
+                    default:              return DXGI_FORMAT_UNKNOWN;
+                        // clang-format on
                 }
-                case DXT1:              image->format = DXGI_FORMAT_BC1_UNORM; break;
-                case DXT2: case DXT3:   image->format = DXGI_FORMAT_BC2_UNORM; break;
-                case DXT4: case DXT5:   image->format = DXGI_FORMAT_BC3_UNORM; break;
-                case ATI1: case BC4U:   image->format = DXGI_FORMAT_BC4_UNORM; break;
-                case BC4S:              image->format = DXGI_FORMAT_BC4_SNORM; break;
-                case ATI2: case BC5U:   image->format = DXGI_FORMAT_BC5_UNORM; break;
-                case BC5S:              image->format = DXGI_FORMAT_BC5_SNORM; break;
-                default:
-                    return ReadResult::UnsupportedFormat;
             }
-        } else {
-            if (header->pixelFormat.flags & PixelFormatFlags::RGB) {
 
+            // TODO: Write more of this bitmask stuff to determine formats.
+            if ((pf.flags & PixelFormatFlags::RGBA) == PixelFormatFlags::RGBA) {
+                switch (pf.bitCount) {
+                    case 32: {
+                        if (pf.rBitMask == 0xFF && pf.gBitMask == 0xFF00 && pf.bBitMask == 0xFF0000 && pf.aBitMask == 0xFF000000)
+                            return DXGI_FORMAT_R8G8B8A8_UNORM;
+                        break;
+                    }
+                }
             }
+
+            return DXGI_FORMAT_UNKNOWN;
+        };
+
+        // We'll always trust the DX10 header.
+        if (additionalHeader == nullptr) {
+            image->format = getFormatInfo(header);
+            if (image->format == DXGI_FORMAT_UNKNOWN)
+                return ReadResult::UnsupportedFormat;
         }
 
         if (header->flags & HeaderFlags::Volume || header->caps2 & Caps2Flags::Cubemap) {
             image->dimension = Texture3D;
         } else {
-            image->dimension = Texture2D;
+            image->dimension = header->height > 1 ? Texture2D : Texture1D;
         }
 
         const auto blockSizeBytes = getBlockSize(image->format);
-        const auto pixelSizeBits = getBitsPerPixel(image->format);
-        if (!blockSizeBytes && !pixelSizeBits)
+        const auto bitsPerPixel = getBitsPerPixel(image->format);
+        if (!blockSizeBytes && !bitsPerPixel)
             return dds::ReadResult::UnsupportedFormat;
 
-        // Read the image fileSize
-        uint32_t totalOffset = 0;
-        {
+        auto computeMipmapSize = [bitsPerPixel, blockSizeBytes](DXGI_FORMAT dxgiFormat, uint32_t width, uint32_t height) -> uint32_t {
+            // Instead of checking each format enum each we'll check for the range in
+            // which the BCn compressed formats are.
+            if ((dxgiFormat >= DXGI_FORMAT_BC1_TYPELESS && dxgiFormat <= DXGI_FORMAT_BC5_SNORM) ||
+                (dxgiFormat >= DXGI_FORMAT_BC6H_TYPELESS && dxgiFormat <= DXGI_FORMAT_BC7_UNORM_SRGB)) {
+                auto pitch = max(1u, (width + 3) / 4) * blockSizeBytes;
+                return pitch * max(1u, (height + 3) / 4);
+            }
+
+            // These formats are special
+            if (dxgiFormat == DXGI_FORMAT_R8G8_B8G8_UNORM || dxgiFormat == DXGI_FORMAT_G8R8_G8B8_UNORM) {
+                return ((width + 1) >> 1) * 4 * height;
+            }
+
+            return max(1u, static_cast<uint32_t>((width * bitsPerPixel + 7) / 8)) * height;
+        };
+
+        // TODO: Support files with multiple resources.
+        if (image->arraySize > 1)
+            return ReadResult::UnsupportedFormat;
+
+        // arraySize is populated with the additional DX10 header.
+        uint64_t totalSize = 0;
+        for (uint32_t i = 0; i < image->arraySize; ++i) {
+            auto mipmaps = min(header->mipmapCount, 1u);
             auto width = header->width;
             auto height = header->height;
-            for (uint32_t mip = 0; mip < header->mipmapCount; ++mip) {
-                uint32_t surfaceSize;
-                if (blockSizeBytes) {
-                    auto temp = ((width + 3) / 4);
-                    surfaceSize = ((1 < temp) ? temp : 1) * blockSizeBytes;
-                } else {
-                    const auto pitch = ((width * pixelSizeBits) + 7) / 8; // Divide by 8 for byte alignment.
-                    surfaceSize = pitch * height;
-                }
-                totalOffset += surfaceSize;
 
-                // Not going to include <algorithm> just for std::max.
-                uint32_t halfWidth = width / 2;
-                width = (1u < halfWidth) ? halfWidth : 1u;
-                uint32_t halfHeight = height / 2;
-                height = (1u < halfHeight) ? halfHeight : 1u;
+            for (uint32_t mip = 0; mip < mipmaps && width != 1; ++mip) {
+                uint32_t size = computeMipmapSize(image->format, width, height);
+                totalSize += static_cast<uint64_t>(size);
+
+                image->mipmaps.emplace_back(ptr, size);
+                ptr += size;
+
+                width = max(width / 2, 1u);
+                height = max(height / 2, 1u);
             }
         }
-        const auto ddsSize = ptr - fileSize + size_t(totalOffset);
-        // if (ddsSize > fileSize || ddsSize < fileSize)
-        //     return dds::ReadResult::InvalidSize;
 
         image->numMips = header->mipmapCount;
         image->width = header->width;
@@ -343,4 +442,4 @@ namespace dds {
         filestream.close();
         return dds::ReadResult::Success;
     }
-}
+} // namespace dds
