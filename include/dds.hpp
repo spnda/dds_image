@@ -1,23 +1,23 @@
 #pragma once
 
-#if __cplusplus >= 201703L && defined(DDS_USE_STD_FILESYSTEM)
+#include "dds_formats.hpp"
+
+#if DDS_CPP_17 && defined(DDS_USE_STD_FILESYSTEM)
 #include <filesystem>
 namespace fs = std::filesystem;
 #endif
 
-#if __cplusplus >= 202002L
+#if DDS_CPP_20
 #include <concepts>
 #endif
 
 #include <fstream>
 #include <iostream>
 
-#include "dds_formats.hpp"
-
 namespace dds {
     // Not going to include <algorithm> just for std::max and std::min
     template <typename T>
-#if __cplusplus >= 202002L
+#if DDS_CPP_20
     requires std::is_arithmetic_v<T>
 #endif
     inline constexpr const T& max(const T& a, const T& b) {
@@ -25,7 +25,7 @@ namespace dds {
     }
 
     template <typename T>
-#if __cplusplus >= 202002L
+#if DDS_CPP_20
     requires std::is_arithmetic_v<T>
 #endif
     inline constexpr const T& min(const T& a, const T& b) {
@@ -294,7 +294,7 @@ namespace dds {
     }
 #endif // #ifdef VK_VERSION_1_0
 
-#if __cplusplus >= 201703L && defined(DDS_USE_STD_FILESYSTEM)
+#if DDS_CPP_17 && defined(DDS_USE_STD_FILESYSTEM)
     DDS_NO_DISCARD inline dds::ReadResult readFile(const fs::path& filepath, dds::Image* image) {
 #else
     DDS_NO_DISCARD inline dds::ReadResult readFile(const std::string& filepath, dds::Image* image) {

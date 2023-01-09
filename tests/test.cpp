@@ -3,6 +3,7 @@
 #include <span>
 
 #define DDS_USE_STD_FILESYSTEM 1
+#include <filesystem>
 #include <dds.hpp>
 
 TEST_CASE("Read DDS and write PPM") {

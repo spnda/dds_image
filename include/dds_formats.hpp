@@ -7,15 +7,26 @@
     static_cast<uint32_t>(char1) | (static_cast<uint32_t>(char2) << 8) | (static_cast<uint32_t>(char3) << 16) |                            \
         (static_cast<uint32_t>(char4) << 24)
 
-#define UNDO_FOUR_CHARACTER_CODE(x, name)                                                                                                  \
-    std::string name;                                                                                                                      \
-    name.reserve(4);                                                                                                                       \
-    name.push_back(x >> 0);                                                                                                                \
-    name.push_back(x >> 8);                                                                                                                \
-    name.push_back(x >> 16);                                                                                                               \
-    name.push_back(x >> 24);
+#define UNDO_FOUR_CHARACTER_CODE(x, name)                                                                                            \
+    unsigned char name[4];                                                                                                           \
+    name[0] = x >> 0;                                                                                                                \
+    name[1] = x >> 8;                                                                                                                \
+    name[2] = x >> 16;                                                                                                               \
+    name[3] = x >> 24;
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#define DDS_CPP_17 1
+#else
+#define DDS_CPP_17 0
+#endif
+
+#if __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+#define DDS_CPP_20 1
+#else
+#define DDS_CPP_20 0
+#endif
+
+#if DDS_CPP_17
 #define DDS_NO_DISCARD [[nodiscard]]
 #else
 #define DDS_NO_DISCARD
@@ -153,7 +164,7 @@ enum DXGI_FORMAT {
 // clang-format on
 
 namespace dds {
-#if __cplusplus >= 202002L
+#if DDS_CPP_20
     template <typename T>
     using span = std::span<T>;
 #else
