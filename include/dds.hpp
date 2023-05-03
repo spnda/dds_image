@@ -50,6 +50,8 @@ namespace dds {
             case DXGI_FORMAT_BC3_UNORM_SRGB:
             case DXGI_FORMAT_BC5_UNORM:
             case DXGI_FORMAT_BC5_SNORM:
+			case DXGI_FORMAT_BC7_UNORM:
+			case DXGI_FORMAT_BC7_UNORM_SRGB:
                 return 16;
             default:
                 return 0;
@@ -212,6 +214,10 @@ namespace dds {
                 return VK_FORMAT_BC5_UNORM_BLOCK;
             case DXGI_FORMAT_BC5_SNORM:
                 return VK_FORMAT_BC5_SNORM_BLOCK;
+			case DXGI_FORMAT_BC7_UNORM:
+				return VK_FORMAT_BC7_UNORM_BLOCK;
+			case DXGI_FORMAT_BC7_UNORM_SRGB:
+				return VK_FORMAT_BC7_SRGB_BLOCK;
 
             case DXGI_FORMAT_R8G8B8A8_UNORM:
                 return VK_FORMAT_R8G8B8A8_UNORM;
@@ -417,11 +423,11 @@ namespace dds {
         // arraySize is populated with the additional DX10 header.
         uint64_t totalSize = 0;
         for (uint32_t i = 0; i < image->arraySize; ++i) {
-            auto mipmaps = min(header->mipmapCount, 1u);
+            auto mipmaps = max(header->mipmapCount, 1u);
             auto width = header->width;
             auto height = header->height;
 
-            for (uint32_t mip = 0; mip < mipmaps && width != 1; ++mip) {
+            for (uint32_t mip = 0; mip < mipmaps && width != 0; ++mip) {
                 uint32_t size = computeMipmapSize(image->format, width, height);
                 totalSize += static_cast<uint64_t>(size);
 
