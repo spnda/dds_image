@@ -245,6 +245,23 @@ namespace dds {
             case DXGI_FORMAT_R16G16B16A16_SNORM:
                 return VK_FORMAT_R16G16B16A16_SNORM;
 
+
+            case DXGI_FORMAT_R32G32_FLOAT:
+                return VK_FORMAT_R32G32_SFLOAT;
+
+            case DXGI_FORMAT_R16G16_FLOAT:
+                return VK_FORMAT_R16G16_SFLOAT;
+
+            case DXGI_FORMAT_R8G8_UNORM:
+                return VK_FORMAT_R8G8_UNORM;
+
+
+            case DXGI_FORMAT_R16_FLOAT:
+                return VK_FORMAT_R16_SFLOAT;
+
+            case DXGI_FORMAT_R8_UNORM:
+                return VK_FORMAT_R8_UNORM;
+
             case DXGI_FORMAT_R8G8_B8G8_UNORM:
             case DXGI_FORMAT_G8R8_G8B8_UNORM:
             case DXGI_FORMAT_YUY2:
@@ -373,6 +390,16 @@ namespace dds {
                     case 32: {
                         if (pf.rBitMask == 0xFF && pf.gBitMask == 0xFF00 && pf.bBitMask == 0xFF0000 && pf.aBitMask == 0xFF000000)
                             return DXGI_FORMAT_R8G8B8A8_UNORM;
+                        break;
+                    }
+                    case 16: {
+                        if (pf.rBitMask == 0xFF && pf.gBitMask == 0xFF00)
+                            return DXGI_FORMAT_R8G8_UNORM;
+                        break;
+                    }
+                    case 8: {
+                        if (pf.rBitMask == 0xFF)
+                            return DXGI_FORMAT_R8_UNORM;
                         break;
                     }
                 }
