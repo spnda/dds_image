@@ -510,12 +510,12 @@ namespace dds {
             image->format = getFormatInfo(header);
             if (image->format == DXGI_FORMAT_UNKNOWN)
                 return ReadResult::UnsupportedFormat;
-        }
 
-        if (header->flags & HeaderFlags::Volume || header->caps2 & Caps2Flags::Cubemap) {
-            image->dimension = Texture3D;
-        } else {
-            image->dimension = header->height > 1 ? Texture2D : Texture1D;
+            if (header->flags & HeaderFlags::Volume || header->caps2 & Caps2Flags::Cubemap) {
+                image->dimension = Texture3D;
+            } else {
+                image->dimension = header->height > 1 ? Texture2D : Texture1D;
+            }
         }
 
         const auto blockSizeBytes = getBlockSize(image->format);
