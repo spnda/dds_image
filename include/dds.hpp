@@ -390,6 +390,8 @@ namespace dds {
                     case 32: {
                         if (pf.rBitMask == 0xFF && pf.gBitMask == 0xFF00 && pf.bBitMask == 0xFF0000 && pf.aBitMask == 0xFF000000)
                             return DXGI_FORMAT_R8G8B8A8_UNORM;
+                        if (pf.rBitMask == 0xFFFF && pf.gBitMask == 0xFFFF0000 && pf.bBitMask == 0 && pf.aBitMask == 00)
+                            return DXGI_FORMAT_R16G16_UNORM;
                         break;
                     }
                     case 16: {
