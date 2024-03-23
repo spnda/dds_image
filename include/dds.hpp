@@ -219,6 +219,49 @@ namespace dds {
 			case DXGI_FORMAT_BC7_UNORM_SRGB:
 				return VK_FORMAT_BC7_SRGB_BLOCK;
 
+			// 8-bit wide formats
+			case DXGI_FORMAT_R8_UNORM:
+                return VK_FORMAT_R8_UNORM;
+			case DXGI_FORMAT_R8_UINT:
+                return VK_FORMAT_R8_UINT;
+			case DXGI_FORMAT_R8_SNORM:
+                return VK_FORMAT_R8_SNORM;
+			case DXGI_FORMAT_R8_SINT:
+                return VK_FORMAT_R8_SINT;
+#if defined(VK_KHR_maintenance5)
+			case DXGI_FORMAT_A8_UNORM:
+                return VK_FORMAT_A8_UNORM_KHR;
+#endif
+
+			// 16-bit wide formats
+            case DXGI_FORMAT_R8G8_UNORM:
+                return VK_FORMAT_R8G8_UNORM;
+            case DXGI_FORMAT_R8G8_UINT:
+                return VK_FORMAT_R8G8_SINT;
+            case DXGI_FORMAT_R8G8_SNORM:
+                return VK_FORMAT_R8G8_SNORM;
+            case DXGI_FORMAT_R8G8_SINT:
+                return VK_FORMAT_R8G8_SINT;
+
+            case DXGI_FORMAT_R16_FLOAT:
+                return VK_FORMAT_R16_SFLOAT;
+            case DXGI_FORMAT_R16_UNORM:
+                return VK_FORMAT_R16_UNORM;
+            case DXGI_FORMAT_R16_UINT:
+                return VK_FORMAT_R16_UINT;
+            case DXGI_FORMAT_R16_SNORM:
+                return VK_FORMAT_R16_SNORM;
+            case DXGI_FORMAT_R16_SINT:
+                return VK_FORMAT_R16_SINT;
+
+			case DXGI_FORMAT_B5G5R5A1_UNORM:
+				return VK_FORMAT_B5G5R5A1_UNORM_PACK16;
+			case DXGI_FORMAT_B5G6R5_UNORM:
+				return VK_FORMAT_B5G6R5_UNORM_PACK16;
+			case DXGI_FORMAT_B4G4R4A4_UNORM:
+				return VK_FORMAT_B4G4R4A4_UNORM_PACK16;
+
+			// 32-bit wide formats
             case DXGI_FORMAT_R8G8B8A8_UNORM:
                 return VK_FORMAT_R8G8B8A8_UNORM;
             case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
@@ -234,6 +277,34 @@ namespace dds {
             case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
                 return VK_FORMAT_B8G8R8A8_SRGB;
 
+            case DXGI_FORMAT_R16G16_FLOAT:
+                return VK_FORMAT_R16G16_SFLOAT;
+			case DXGI_FORMAT_R16G16_UNORM:
+				return VK_FORMAT_R16G16_UNORM;
+			case DXGI_FORMAT_R16G16_UINT:
+				return VK_FORMAT_R16G16_UINT;
+			case DXGI_FORMAT_R16G16_SNORM:
+				return VK_FORMAT_R16G16_SNORM;
+			case DXGI_FORMAT_R16G16_SINT:
+				return VK_FORMAT_R16G16_SINT;
+
+			case DXGI_FORMAT_R32_FLOAT:
+				return VK_FORMAT_R32_SFLOAT;
+			case DXGI_FORMAT_R32_UINT:
+				return VK_FORMAT_R32_UINT;
+			case DXGI_FORMAT_R32_SINT:
+				return VK_FORMAT_R32_SINT;
+
+			case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:
+				return VK_FORMAT_E5B9G9R9_UFLOAT_PACK32;
+			case DXGI_FORMAT_R10G10B10A2_UNORM:
+				return VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+			case DXGI_FORMAT_R10G10B10A2_UINT:
+				return VK_FORMAT_A2B10G10R10_UINT_PACK32;
+			case DXGI_FORMAT_R11G11B10_FLOAT:
+				return VK_FORMAT_B10G11R11_UFLOAT_PACK32;
+
+			// 64-bit wide formats
             case DXGI_FORMAT_R16G16B16A16_FLOAT:
                 return VK_FORMAT_R16G16B16A16_SFLOAT;
             case DXGI_FORMAT_R16G16B16A16_SINT:
@@ -245,22 +316,28 @@ namespace dds {
             case DXGI_FORMAT_R16G16B16A16_SNORM:
                 return VK_FORMAT_R16G16B16A16_SNORM;
 
-
             case DXGI_FORMAT_R32G32_FLOAT:
                 return VK_FORMAT_R32G32_SFLOAT;
+			case DXGI_FORMAT_R32G32_UINT:
+				return VK_FORMAT_R32G32_UINT;
+			case DXGI_FORMAT_R32G32_SINT:
+				return VK_FORMAT_R32G32_SINT;
 
-            case DXGI_FORMAT_R16G16_FLOAT:
-                return VK_FORMAT_R16G16_SFLOAT;
+			// 96-bit wide formats
+			case DXGI_FORMAT_R32G32B32_FLOAT:
+				return VK_FORMAT_R32G32B32_SFLOAT;
+			case DXGI_FORMAT_R32G32B32_UINT:
+				return VK_FORMAT_R32G32B32_UINT;
+			case DXGI_FORMAT_R32G32B32_SINT:
+				return VK_FORMAT_R32G32B32_SINT;
 
-            case DXGI_FORMAT_R8G8_UNORM:
-                return VK_FORMAT_R8G8_UNORM;
-
-
-            case DXGI_FORMAT_R16_FLOAT:
-                return VK_FORMAT_R16_SFLOAT;
-
-            case DXGI_FORMAT_R8_UNORM:
-                return VK_FORMAT_R8_UNORM;
+			// 128-bit wide formats
+			case DXGI_FORMAT_R32G32B32A32_FLOAT:
+				return VK_FORMAT_R32G32B32A32_SFLOAT;
+			case DXGI_FORMAT_R32G32B32A32_UINT:
+				return VK_FORMAT_R32G32B32A32_UINT;
+			case DXGI_FORMAT_R32G32B32A32_SINT:
+				return VK_FORMAT_R32G32B32A32_SINT;
 
             case DXGI_FORMAT_R8G8_B8G8_UNORM:
             case DXGI_FORMAT_G8R8_G8B8_UNORM:
@@ -392,16 +469,26 @@ namespace dds {
                             return DXGI_FORMAT_R8G8B8A8_UNORM;
                         if (pf.rBitMask == 0xFFFF && pf.gBitMask == 0xFFFF0000 && pf.bBitMask == 0 && pf.aBitMask == 00)
                             return DXGI_FORMAT_R16G16_UNORM;
+						if (pf.rBitMask == 0x3FF && pf.gBitMask == 0xFFC00 && pf.bBitMask == 0x3FF00000)
+							return DXGI_FORMAT_R10G10B10A2_UNORM;
                         break;
                     }
                     case 16: {
+						if (pf.rBitMask == 0xFFFF)
+							return DXGI_FORMAT_R16_UNORM;
                         if (pf.rBitMask == 0xFF && pf.gBitMask == 0xFF00)
                             return DXGI_FORMAT_R8G8_UNORM;
+						if (pf.rBitMask == 0xF && pf.gBitMask == 0xF0 && pf.bBitMask == 0xF00 && pf.aBitMask == 0xF000)
+							return DXGI_FORMAT_R8G8B8A8_UNORM;
+						if (pf.rBitMask == 0xF00 && pf.gBitMask == 0xF0 && pf.bBitMask == 0xF && pf.aBitMask == 0xF000)
+							return DXGI_FORMAT_B8G8R8A8_UNORM;
                         break;
                     }
                     case 8: {
                         if (pf.rBitMask == 0xFF)
                             return DXGI_FORMAT_R8_UNORM;
+						if (pf.aBitMask == 0xFF)
+							return DXGI_FORMAT_A8_UNORM;
                         break;
                     }
                 }
