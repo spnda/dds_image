@@ -20,7 +20,7 @@ namespace dds {
 #if DDS_CPP_20
     requires std::is_arithmetic_v<T>
 #endif
-    inline constexpr const T& max(const T& a, const T& b) {
+    DDS_NO_DISCARD constexpr const T& max(const T& a, const T& b) noexcept {
         return a > b ? a : b;
     }
 
@@ -28,16 +28,24 @@ namespace dds {
 #if DDS_CPP_20
     requires std::is_arithmetic_v<T>
 #endif
-    inline constexpr const T& min(const T& a, const T& b) {
+    DDS_NO_DISCARD constexpr const T& min(const T& a, const T& b) noexcept {
         return a > b ? b : a;
     }
 
-    template <typename T>
-    inline constexpr bool hasBit(T value, T bit) {
+    template <typename T, typename U>
+#if DDS_CPP_20
+    requires ((std::is_enum_v<T> && std::integral<std::underlying_type_t<T>>) || std::integral<T>) && requires (T t, U u) {
+        { t & u } -> std::same_as<U>;
+    }
+#endif
+    DDS_NO_DISCARD constexpr bool hasBit(T value, U bit) noexcept {
+#if !DDS_CPP_20
+        static_assert((std::is_enum_v<T> && std::is_integral_v<std::underlying_type_t<T>>) || std::is_integral_v<T>);
+#endif
         return (value & bit) == bit;
     }
 
-    DDS_NO_DISCARD inline uint32_t getBlockSize(const DXGI_FORMAT format) {
+    DDS_NO_DISCARD constexpr uint32_t getBlockSize(const DXGI_FORMAT format) {
         switch (format) {
             case DXGI_FORMAT_BC1_UNORM:
             case DXGI_FORMAT_BC1_UNORM_SRGB:
@@ -58,7 +66,7 @@ namespace dds {
         }
     }
 
-    DDS_NO_DISCARD inline uint32_t getBitsPerPixel(const DXGI_FORMAT format) {
+    DDS_NO_DISCARD constexpr uint32_t getBitsPerPixel(const DXGI_FORMAT format) {
         switch (format) {
             case DXGI_FORMAT_R32G32B32A32_TYPELESS:
             case DXGI_FORMAT_R32G32B32A32_FLOAT:
@@ -446,7 +454,7 @@ namespace dds {
         // Determine format information
         auto getFormatInfo = [](const dds::FileHeader* header) -> DXGI_FORMAT {
             auto& pf = header->pixelFormat;
-            if ((pf.flags & PixelFormatFlags::FourCC) == PixelFormatFlags::FourCC) {
+			if (hasBit(pf.flags, PixelFormatFlags::FourCC)) {
                 switch (pf.fourCC) {
                     // clang-format off
                     case DXT1:            return DXGI_FORMAT_BC1_UNORM;
@@ -462,7 +470,7 @@ namespace dds {
             }
 
             // TODO: Write more of this bitmask stuff to determine formats.
-            if ((pf.flags & PixelFormatFlags::RGBA) == PixelFormatFlags::RGBA) {
+			if (hasBit(pf.flags, PixelFormatFlags::RGBA)) {
                 switch (pf.bitCount) {
                     case 32: {
                         if (pf.rBitMask == 0xFF && pf.gBitMask == 0xFF00 && pf.bBitMask == 0xFF0000 && pf.aBitMask == 0xFF000000)

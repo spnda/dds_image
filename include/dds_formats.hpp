@@ -3,6 +3,12 @@
 #include <cstdint>
 #include <vector>
 
+#if defined(_MSVC_LANG)
+#define DDS_CPP_VERSION _MSVC_LANG
+#else
+#define DDS_CPP_VERSION __cplusplus
+#endif
+
 #define MAKE_FOUR_CHARACTER_CODE(char1, char2, char3, char4)                                                                               \
     static_cast<uint32_t>(char1) | (static_cast<uint32_t>(char2) << 8) | (static_cast<uint32_t>(char3) << 16) |                            \
         (static_cast<uint32_t>(char4) << 24)
@@ -158,6 +164,8 @@ enum DXGI_FORMAT {
     DXGI_FORMAT_P208                        = 130,
     DXGI_FORMAT_V208                        = 131,
     DXGI_FORMAT_V408                        = 132,
+	DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE,
+	DXGI_FORMAT_SAMPLER_FEEDBACK_MIP_REGION_USED_OPAQUE,
     DXGI_FORMAT_FORCE_UINT                  = 0xffffffff
 };
 #endif // #ifndef __dxgiformat_h__
@@ -232,8 +240,8 @@ namespace dds {
         LuminanceA = Luminance | AlphaPixels,
     };
 
-    DDS_NO_DISCARD inline PixelFormatFlags operator&(PixelFormatFlags a, PixelFormatFlags b) {
-        return static_cast<PixelFormatFlags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+    DDS_NO_DISCARD constexpr PixelFormatFlags operator&(PixelFormatFlags a, PixelFormatFlags b) {
+        return static_cast<PixelFormatFlags>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
     }
 
     struct FilePixelFormat {
