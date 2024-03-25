@@ -254,6 +254,7 @@ namespace dds {
         uint32_t bBitMask;
         uint32_t aBitMask;
     };
+    static_assert(sizeof(FilePixelFormat) == 32, "DDS file pixel format size mismatch");
 
     enum HeaderFlags : uint32_t {
         Caps = 0x1,
@@ -289,7 +290,7 @@ namespace dds {
 
         DDS_NO_DISCARD bool hasAlphaFlag() const;
     };
-    static_assert(sizeof(FileHeader) == 124, "DDS Header size mismatch. Must be 124 bytes.");
+    static_assert(sizeof(FileHeader) == 124, "DDS Header size mismatch");
 
     inline bool FileHeader::hasAlphaFlag() const {
         return (pixelFormat.flags & PixelFormatFlags::AlphaPixels) == PixelFormatFlags::AlphaPixels;
@@ -303,6 +304,7 @@ namespace dds {
         uint32_t arraySize;
         uint32_t miscFlags2;
     };
+    static_assert(sizeof(Dx10Header) == 20, "DDS DX10 Header size mismatch");
 
     struct Image {
         uint32_t numMips;

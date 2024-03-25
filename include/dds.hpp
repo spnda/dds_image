@@ -402,24 +402,12 @@ namespace dds {
     }
 #endif // #ifdef VK_VERSION_1_0
 
-#if DDS_CPP_17 && defined(DDS_USE_STD_FILESYSTEM)
-    DDS_NO_DISCARD inline dds::ReadResult readFile(const fs::path& filepath, dds::Image* image) {
-#else
-    DDS_NO_DISCARD inline dds::ReadResult readFile(const std::string& filepath, dds::Image* image) {
-#endif
-        std::ifstream filestream(filepath, std::ios::binary | std::ios::in);
-        if (!filestream.is_open())
-            return dds::ReadResult::Failure;
-
-        // Read the file into a vector.
-        filestream.seekg(0, std::ios::end);
-        auto fileSize = filestream.tellg();
-        image->data.resize(fileSize);
-        filestream.seekg(0);
-        filestream.read(reinterpret_cast<char*>(image->data.data()), fileSize);
-
+	/**
+	 * When using this function, image->data will always be empty and the mipmap span's will reference
+	 * the passed pointer.
+	 */
+	DDS_NO_DISCARD inline ReadResult readImage(std::uint8_t* ptr, std::size_t fileSize, dds::Image* image) {
         // Read the magic number
-        auto* ptr = image->data.data();
         auto* ddsMagic = reinterpret_cast<uint32_t*>(ptr);
         ptr += sizeof(uint32_t);
 
@@ -464,17 +452,22 @@ namespace dds {
                     case BC4S:            return DXGI_FORMAT_BC4_SNORM;
                     case ATI2: case BC5U: return DXGI_FORMAT_BC5_UNORM;
                     case BC5S:            return DXGI_FORMAT_BC5_SNORM;
+					case RGBG:            return DXGI_FORMAT_R8G8_B8G8_UNORM;
+					case GRBG:            return DXGI_FORMAT_G8R8_G8B8_UNORM;
+					case YUY2:            return DXGI_FORMAT_YUY2;
                     default:              return DXGI_FORMAT_UNKNOWN;
                         // clang-format on
                 }
             }
 
             // TODO: Write more of this bitmask stuff to determine formats.
-			if (hasBit(pf.flags, PixelFormatFlags::RGBA)) {
+			if (hasBit(pf.flags, PixelFormatFlags::RGB)) {
                 switch (pf.bitCount) {
                     case 32: {
                         if (pf.rBitMask == 0xFF && pf.gBitMask == 0xFF00 && pf.bBitMask == 0xFF0000 && pf.aBitMask == 0xFF000000)
                             return DXGI_FORMAT_R8G8B8A8_UNORM;
+						if (pf.rBitMask == 0xFF0000 && pf.gBitMask == 0xFF00 && pf.bBitMask == 0xFF && pf.aBitMask == 0xFF000000)
+							return DXGI_FORMAT_B8G8R8A8_UNORM;
                         if (pf.rBitMask == 0xFFFF && pf.gBitMask == 0xFFFF0000 && pf.bBitMask == 0 && pf.aBitMask == 00)
                             return DXGI_FORMAT_R16G16_UNORM;
 						if (pf.rBitMask == 0x3FF && pf.gBitMask == 0xFFC00 && pf.bBitMask == 0x3FF00000)
@@ -490,6 +483,12 @@ namespace dds {
 							return DXGI_FORMAT_R8G8B8A8_UNORM;
 						if (pf.rBitMask == 0xF00 && pf.gBitMask == 0xF0 && pf.bBitMask == 0xF && pf.aBitMask == 0xF000)
 							return DXGI_FORMAT_B8G8R8A8_UNORM;
+						if (pf.rBitMask == 0xF800 && pf.gBitMask == 0x07E0 && pf.bBitMask == 0x1F && pf.aBitMask == 0) {
+							if (pf.aBitMask == 0)
+								return DXGI_FORMAT_B5G6R5_UNORM;
+							if (pf.aBitMask == 0x8000)
+								return DXGI_FORMAT_B5G5R5A1_UNORM;
+						}
                         break;
                     }
                     case 8: {
@@ -553,6 +552,7 @@ namespace dds {
             auto width = header->width;
             auto height = header->height;
 
+			image->mipmaps.reserve(mipmaps);
             for (uint32_t mip = 0; mip < mipmaps && width != 0; ++mip) {
                 uint32_t size = computeMipmapSize(image->format, width, height);
                 totalSize += static_cast<uint64_t>(size);
@@ -565,13 +565,33 @@ namespace dds {
             }
         }
 
-        image->numMips = header->mipmapCount;
+        image->numMips = max(header->mipmapCount, 1u);
         image->width = header->width;
         image->height = header->height;
         image->supportsAlpha = header->hasAlphaFlag();
 
-        // Close the file and return success
-        filestream.close();
         return dds::ReadResult::Success;
     }
+
+	/**
+	 * Reads a file from the given path and parses the image. The entire file contents will be in image->data
+	 * after this function returns successfully. The mipmap spans will point to within image->data.
+	 */
+	#if DDS_CPP_17 && defined(DDS_USE_STD_FILESYSTEM)
+    DDS_NO_DISCARD inline dds::ReadResult readFile(const fs::path& filepath, dds::Image* image) {
+#else
+    DDS_NO_DISCARD inline dds::ReadResult readFile(const std::string& filepath, dds::Image* image) {
+#endif
+		std::ifstream filestream(filepath, std::ios::binary | std::ios::in);
+		if (!filestream.is_open())
+			return dds::ReadResult::Failure;
+
+		// Read the file into a vector.
+		filestream.seekg(0, std::ios::end);
+		auto fileSize = filestream.tellg();
+		image->data.resize(fileSize);
+		filestream.seekg(0);
+		filestream.read(reinterpret_cast<char*>(image->data.data()), fileSize);
+		return readImage(image->data.data(), fileSize, image);
+	}
 } // namespace dds
