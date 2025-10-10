@@ -507,6 +507,7 @@ namespace dds {
         // We'll always trust the DX10 header.
         if (additionalHeader == nullptr) {
             image->format = getFormatInfo(header);
+            std::cout << image->format << '\n';
             if (image->format == DXGI_FORMAT_UNKNOWN)
                 return ReadResult::UnsupportedFormat;
 
@@ -521,6 +522,7 @@ namespace dds {
 
         const auto blockSizeBytes = getBlockSize(image->format);
         const auto bitsPerPixel = getBitsPerPixel(image->format);
+        std::cout << blockSizeBytes << ',' << bitsPerPixel << '\n';
         if (!blockSizeBytes && !bitsPerPixel)
             return dds::ReadResult::UnsupportedFormat;
 
@@ -542,8 +544,9 @@ namespace dds {
         };
 
         // TODO: Support files with multiple resources.
-        if (image->arraySize > 1)
-            return ReadResult::UnsupportedFormat;
+        std::cout << image->arraySize << '\n';
+        //if (image->arraySize > 1)
+        //    return ReadResult::UnsupportedFormat;
 
         // arraySize is populated with the additional DX10 header.
         uint64_t totalSize = 0;
@@ -589,9 +592,9 @@ namespace dds {
 		// Read the file into a vector.
 		filestream.seekg(0, std::ios::end);
 		auto fileSize = filestream.tellg();
-		image->data.resize(fileSize);
+        image->data = std::make_unique<uint8_t[]>(fileSize);
 		filestream.seekg(0);
-		filestream.read(reinterpret_cast<char*>(image->data.data()), fileSize);
-		return readImage(image->data.data(), fileSize, image);
+		filestream.read(reinterpret_cast<char*>(image->data.get()), fileSize);
+		return readImage(image->data.get(), fileSize, image);
 	}
 } // namespace dds

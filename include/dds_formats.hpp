@@ -319,7 +319,7 @@ namespace dds {
         ResourceDimension dimension;
         bool supportsAlpha = false;
         DXGI_FORMAT format;
-        std::vector<uint8_t> data = {};
+        std::unique_ptr<uint8_t[]> data = nullptr;
         std::vector<dds::span<uint8_t>> mipmaps;
     };
 } // namespace dds
