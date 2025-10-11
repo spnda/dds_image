@@ -507,7 +507,6 @@ namespace dds {
         // We'll always trust the DX10 header.
         if (additionalHeader == nullptr) {
             image->format = getFormatInfo(header);
-            std::cout << image->format << '\n';
             if (image->format == DXGI_FORMAT_UNKNOWN)
                 return ReadResult::UnsupportedFormat;
 
@@ -522,7 +521,6 @@ namespace dds {
 
         const auto blockSizeBytes = getBlockSize(image->format);
         const auto bitsPerPixel = getBitsPerPixel(image->format);
-        std::cout << blockSizeBytes << ',' << bitsPerPixel << '\n';
         if (!blockSizeBytes && !bitsPerPixel)
             return dds::ReadResult::UnsupportedFormat;
 
@@ -544,7 +542,6 @@ namespace dds {
         };
 
         // TODO: Support files with multiple resources.
-        std::cout << image->arraySize << '\n';
         //if (image->arraySize > 1)
         //    return ReadResult::UnsupportedFormat;
 
