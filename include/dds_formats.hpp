@@ -321,6 +321,6 @@ namespace dds {
         bool supportsAlpha = false;
         DXGI_FORMAT format;
         std::unique_ptr<uint8_t[]> data = nullptr;
-        std::vector<dds::span<uint8_t>> mipmaps;
+        std::vector<dds::span<const uint8_t>> mipmaps;
     };
 } // namespace dds
